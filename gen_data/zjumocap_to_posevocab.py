@@ -34,7 +34,7 @@ def main():
     smpl_params = dotdict()
     smpl_params.global_orient = motion.Rh
     smpl_params.transl = motion.Th
-    smpl_params.body_pose = motion.poses[:, :69] # 21 * 3
+    smpl_params.body_pose = motion.poses[:, 3:72-6] # 21 * 3
     smpl_params.betas = motion.shapes[:, :10]
     export_dotdict(smpl_params, join(args.posevocab_root, args.smpl_params_file))
 
@@ -44,7 +44,7 @@ def main():
         calibration[cam] = dotdict()
         calibration[cam].K = cameras[cam].K.reshape(-1).tolist()
         calibration[cam].R = cameras[cam].R.tolist()
-        calibration[cam].T = cameras[cam].T.tolist()
+        calibration[cam].T = cameras[cam].T.reshape(-1).tolist()
         calibration[cam].distCoeff = cameras[cam].D.reshape(-1).tolist()
         # calibration[cam].imgSize = [cameras[cam].H, cameras[cam].W]
         calibration[cam].imgSize = args.h_w_overwrite

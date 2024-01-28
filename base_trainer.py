@@ -203,7 +203,7 @@ class BaseTrainer:
                 # if True:
                     self.mini_test()
                 time1 = time.time()
-                print('One iteration costs %f secs' % (time1 - time0))
+                # print('One iteration costs %f secs' % (time1 - time0))
 
             """ EPOCH """
             # record epoch loss

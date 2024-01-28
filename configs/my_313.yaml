@@ -12,7 +12,7 @@ train:
   prev_ckpt: null
   save_init_ckpt: false
   start_epoch: 0
-  end_epoch: 100
+  end_epoch: 10
   ckpt_interval:
     epoch: 1
     batch: 10000

@@ -33,7 +33,7 @@ def farthest_point_sampling(points):
 def sample(args):
     smpl_params = np.load(args.data_dir + '/smpl_params.npz')
     body_poses = smpl_params['body_pose'][args.frame_list]
-    if body_poses.shape[1] == 69:
+    if body_poses.shape[1] == 69 or body_poses.shape[1] == 63:
         print('# Using smpl data')
         body_poses = body_poses[:, :21 * 3]
     else:

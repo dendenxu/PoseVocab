@@ -44,12 +44,12 @@ class MvRgbDataset(Dataset):
         self.extr_mats = []
         for view_idx in range(self.view_num):
             extr_mat = np.identity(4, np.float32)
-            extr_mat[:3, :3] = np.array(cam_data['cam%02d' % view_idx]['R'], np.float32).reshape(3, 3)
-            extr_mat[:3, 3] = np.array(cam_data['cam%02d' % view_idx]['T'], np.float32)
+            extr_mat[:3, :3] = np.array(cam_data['%02d' % view_idx]['R'], np.float32).reshape(3, 3)
+            extr_mat[:3, 3] = np.array(cam_data['%02d' % view_idx]['T'], np.float32)
             self.extr_mats.append(extr_mat)
-        self.intr_mats = [np.array(cam_data['cam%02d' % view_idx]['K'], np.float32).reshape(3, 3) for view_idx in range(self.view_num)]
-        self.img_heights = [cam_data['cam%02d' % view_idx]['imgSize'][1] for view_idx in range(self.view_num)]
-        self.img_widths = [cam_data['cam%02d' % view_idx]['imgSize'][0] for view_idx in range(self.view_num)]
+        self.intr_mats = [np.array(cam_data['%02d' % view_idx]['K'], np.float32).reshape(3, 3) for view_idx in range(self.view_num)]
+        self.img_heights = [cam_data['%02d' % view_idx]['imgSize'][1] for view_idx in range(self.view_num)]
+        self.img_widths = [cam_data['%02d' % view_idx]['imgSize'][0] for view_idx in range(self.view_num)]
         self.gender = 'neutral'
 
         smpl_data = np.load(self.data_dir + '/smpl_params.npz', allow_pickle = True)
@@ -87,18 +87,18 @@ class MvRgbDataset(Dataset):
             for pose_idx in self.pose_list:
                 for view_idx in self.used_cam_ids:
                     self.data_list.append((pose_idx, view_idx))
-            # filter missing files
-            self.missing_data_list = []
-            with open(self.data_dir + '/missing_img_files.txt', 'r') as fp:
-                lines = fp.readlines()
-            for line in lines:
-                line = line.replace('\\', '/')  # considering both Windows and Ubuntu file system
-                frame_idx = int(os.path.basename(line).replace('.jpg', ''))
-                view_idx = int(os.path.basename(os.path.dirname(line)).replace('cam', ''))
-                self.missing_data_list.append((frame_idx, view_idx))
-            for missing_data_idx in self.missing_data_list:
-                if missing_data_idx in self.data_list:
-                    self.data_list.remove(missing_data_idx)
+            # # filter missing files
+            # self.missing_data_list = []
+            # with open(self.data_dir + '/missing_img_files.txt', 'r') as fp:
+            #     lines = fp.readlines()
+            # for line in lines:
+            #     line = line.replace('\\', '/')  # considering both Windows and Ubuntu file system
+            #     frame_idx = int(os.path.basename(line).replace('.jpg', ''))
+            #     view_idx = int(os.path.basename(os.path.dirname(line)).replace('cam', ''))
+            #     self.missing_data_list.append((frame_idx, view_idx))
+            # for missing_data_idx in self.missing_data_list:
+            #     if missing_data_idx in self.data_list:
+            #         self.data_list.remove(missing_data_idx)
 
         print('# Dataset contains %d items' % len(self))
 
@@ -162,7 +162,7 @@ class MvRgbDataset(Dataset):
 
         # SMPL
         with torch.no_grad():
-            if training:
+            if training and 'left_hand_pose' in self.smpl_data:
                 left_hand_pose = self.smpl_data['left_hand_pose'][pose_idx]
                 right_hand_pose = self.smpl_data['right_hand_pose'][pose_idx]
             else:
@@ -172,8 +172,8 @@ class MvRgbDataset(Dataset):
                                                 global_orient = self.smpl_data['global_orient'][pose_idx][None],
                                                 transl = self.smpl_data['transl'][pose_idx][None],
                                                 body_pose = self.smpl_data['body_pose'][pose_idx][None],
-                                                jaw_pose = self.smpl_data['jaw_pose'][pose_idx][None],
-                                                expression = self.smpl_data['expression'][pose_idx][None],
+                                                jaw_pose = self.smpl_data['jaw_pose'][pose_idx][None] if 'jaw_pose' in self.smpl_data else None,
+                                                expression = self.smpl_data['expression'][pose_idx][None] if 'expression' in self.smpl_data else None,
                                                 left_hand_pose = left_hand_pose[None],
                                                 right_hand_pose = right_hand_pose[None])
             cano_smpl = self.smpl_model.forward(betas = self.smpl_data['betas'][0][None],
@@ -187,14 +187,14 @@ class MvRgbDataset(Dataset):
 
         data_item = dict()
         if self.load_smpl_pos_map:
-            smpl_pos_map = cv.imread(self.data_dir + '/smpl_pos_map/%08d.exr' % pose_idx, cv.IMREAD_UNCHANGED)
+            smpl_pos_map = cv.imread(self.data_dir + '/smpl_pos_map/%06d.exr' % pose_idx, cv.IMREAD_UNCHANGED)
             pos_map_size = smpl_pos_map.shape[1] // 2
             smpl_pos_map = np.concatenate([smpl_pos_map[:, :pos_map_size], smpl_pos_map[:, pos_map_size:]], 2)
             smpl_pos_map = smpl_pos_map.transpose((2, 0, 1))
             data_item['smpl_pos_map'] = smpl_pos_map
 
         if self.load_smpl_nml_map:
-            smpl_nml_map = cv.imread(self.data_dir + '/smpl_nml_map/%08d.exr' % pose_idx, cv.IMREAD_UNCHANGED)
+            smpl_nml_map = cv.imread(self.data_dir + '/smpl_nml_map/%06d.exr' % pose_idx, cv.IMREAD_UNCHANGED)
             nml_map_size = smpl_nml_map.shape[1] // 2
             smpl_nml_map = np.concatenate([smpl_nml_map[:, :nml_map_size], smpl_nml_map[:, nml_map_size:]], 2)
             smpl_nml_map = smpl_nml_map.transpose((2, 0, 1))
@@ -231,9 +231,9 @@ class MvRgbDataset(Dataset):
         data_item['live_bounds'] = live_bounds
 
         if training:
-            color_img = cv.imread(self.data_dir + '/images/cam%02d/%08d.jpg' % (view_idx, pose_idx), cv.IMREAD_UNCHANGED)
-            mask_img = cv.imread(self.data_dir + '/masks/cam%02d/%08d.jpg' % (view_idx, pose_idx), cv.IMREAD_UNCHANGED)
-            depth_path = self.depth_dir + '/cam%02d/%08d.png' % (view_idx, pose_idx)
+            color_img = cv.imread(self.data_dir + '/images/%02d/%06d.jpg' % (view_idx, pose_idx), cv.IMREAD_UNCHANGED)
+            mask_img = cv.imread(self.data_dir + '/masks/%02d/%06d.png' % (view_idx, pose_idx), cv.IMREAD_UNCHANGED)
+            depth_path = self.depth_dir + '/%02d/%06d.png' % (view_idx, pose_idx)
             if os.path.exists(depth_path):
                 depth_img = cv.imread(depth_path, cv.IMREAD_UNCHANGED)
             else:
@@ -295,8 +295,8 @@ class MvRgbDataset(Dataset):
             ray_d = ray_d[mask_at_bound]
 
             if 'eval' in kwargs and kwargs['eval'] == True:
-                if os.path.exists(self.depth_dir + '/cam%02d/%08d.png' % (view_idx, pose_idx)):
-                    depth_img = cv.imread(self.depth_dir + '/cam%02d/%08d.png' % (view_idx, pose_idx), cv.IMREAD_UNCHANGED) / 1000.
+                if os.path.exists(self.depth_dir + '/%02d/%06d.png' % (view_idx, pose_idx)):
+                    depth_img = cv.imread(self.depth_dir + '/%02d/%06d.png' % (view_idx, pose_idx), cv.IMREAD_UNCHANGED) / 1000.
                 else:
                     depth_img = np.zeros((img_h, img_w), np.float32)
                 depth_gt = depth_img[uv[:, 1], uv[:, 0]]
