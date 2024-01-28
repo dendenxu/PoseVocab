@@ -4,11 +4,11 @@ mode: train
 
 train:
   data:
-    subject_name: subject00
-    data_dir: 'data/thuman4/subject00'
-    frame_range: [0, 2000, 1]
-    used_cam_ids: [0, 1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
-  net_ckpt_dir: 'data/results/subject00'
+    subject_name: my_313
+    data_dir: 'data/my_zju_mocap/my_313'
+    frame_range: [0, 60, 1]
+    used_cam_ids: [0, 6, 12, 18]
+  net_ckpt_dir: 'data/results/my_313'
   prev_ckpt: null
   save_init_ckpt: false
   start_epoch: 0
@@ -52,14 +52,11 @@ train:
   num_workers: 4
 test:
   data:
-    data_dir: 'data/thuman4/subject00'
-    frame_range: [2000, 2500, 1]
+    data_dir: 'data/my_zju_mocap/my_313'
+    used_cam_ids: [3, 9, 15]
+    frame_range: [60, 120, 20]
     frame_win: 2
     fix_head_pose: true
-  pose_data:
-    data_path: 'test_pose/thuman4/pose_01.npz'
-    frame_range: [0, 1500, 1]
-    frame_win: 2
 
   # render view setting
   view_setting: 'free'  # 'free' or 'camera'
@@ -75,7 +72,7 @@ test:
   infer_rgb: true
   save_mesh: false
   render_skeleton: true
-  prev_ckpt: 'data/pretrained_models/subject00'
+  prev_ckpt: 'data/my_zju_mocap/my_313'
 
 model:
   local_pose: true

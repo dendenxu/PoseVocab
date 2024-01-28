@@ -1,8 +1,9 @@
-import numpy as np
 import os
 import torch
+import numpy as np
 import pytorch3d.transforms
 
+from easyvolcap.utils.console_utils import *
 from gen_data.volume import calc_cano_weight_volume
 
 device = 'cuda:0'
@@ -29,12 +30,12 @@ def farthest_point_sampling(points):
     return sampled_indices
 
 
-def sample():
-    smpl_params = np.load(data_dir + '/smpl_params.npz')
-    body_poses = smpl_params['body_pose'][frame_list]
+def sample(args):
+    smpl_params = np.load(args.data_dir + '/smpl_params.npz')
+    body_poses = smpl_params['body_pose'][args.frame_list]
     if body_poses.shape[1] == 69:
         print('# Using smpl data')
-        body_poses = body_poses[:, :21*3]
+        body_poses = body_poses[:, :21 * 3]
     else:
         print('# Using smpl-x data')
     body_poses = torch.from_numpy(body_poses).to(torch.float32).to(device)
@@ -50,17 +51,25 @@ def sample():
         sort_quats.append(quaternions[joint_idx][sort_indices_])
     sort_indices = np.array(sort_indices, np.int32)
     sort_quats = torch.stack(sort_quats, 0).cpu().numpy().astype(np.float32)
-    os.makedirs(data_dir + '/key_rotations', exist_ok = True)
-    np.save(data_dir + '/key_rotations/sorted_indices.npy', sort_indices)
-    np.save(data_dir + '/key_rotations/sorted_rotations.npy', sort_quats)
+    os.makedirs(args.data_dir + '/key_rotations', exist_ok=True)
+    np.save(args.data_dir + '/key_rotations/sorted_indices.npy', sort_indices)
+    np.save(args.data_dir + '/key_rotations/sorted_rotations.npy', sort_quats)
+
+
+@catch_throw
+def main():
+    # data_dir, frame_list = 'data/thuman4/subject00', list(range(0, 2000))
+    args = dotdict()
+    args.data_dir = 'data/my_zju_mocap/my_313'
+    args.frame_list = list(range(0, 60))
+    args = dotdict(vars(build_parser(args, description=__doc__).parse_args()))
+
+    """ sample key rotations """
+    sample(args)
+
+    """ calculate blending weight volume """
+    calc_cano_weight_volume(args.data_dir, gender='neutral')
 
 
 if __name__ == '__main__':
-    data_dir, frame_list = 'G:/MultiviewRGB/subject00', list(range(0, 2000))
-
-    """ sample key rotations """
-    sample()
-
-    """ calculate blending weight volume """
-    calc_cano_weight_volume(data_dir, gender = 'neutral')
-
+    main()
