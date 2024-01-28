@@ -50,7 +50,7 @@ class MvRgbDataset(Dataset):
         self.intr_mats = [np.array(cam_data['%02d' % view_idx]['K'], np.float32).reshape(3, 3) for view_idx in range(self.view_num)]
         self.img_heights = [cam_data['%02d' % view_idx]['imgSize'][1] for view_idx in range(self.view_num)]
         self.img_widths = [cam_data['%02d' % view_idx]['imgSize'][0] for view_idx in range(self.view_num)]
-        self.gender = 'neutral'
+        self.gender = 'male'
 
         smpl_data = np.load(self.data_dir + '/smpl_params.npz', allow_pickle = True)
         smpl_data = dict(smpl_data)
@@ -70,7 +70,7 @@ class MvRgbDataset(Dataset):
                     print(f'# Selected frame indices: range({frame_range[0]}, {frame_range[1]}, {frame_range[2]})')
                     frame_range = range(frame_range[0], frame_range[1], frame_range[2])
             elif isinstance(frame_range, str):
-                frame_range = np.loadtxt(self.data_dir + '/' + frame_range).astype(np.int).tolist()
+                frame_range = np.loadtxt(self.data_dir + '/' + frame_range).astype(int).tolist()
                 print(f'# Selected frame indices: {frame_range}')
             self.pose_list = list(frame_range)
         else:
@@ -87,18 +87,20 @@ class MvRgbDataset(Dataset):
             for pose_idx in self.pose_list:
                 for view_idx in self.used_cam_ids:
                     self.data_list.append((pose_idx, view_idx))
-            # # filter missing files
-            # self.missing_data_list = []
-            # with open(self.data_dir + '/missing_img_files.txt', 'r') as fp:
-            #     lines = fp.readlines()
-            # for line in lines:
-            #     line = line.replace('\\', '/')  # considering both Windows and Ubuntu file system
-            #     frame_idx = int(os.path.basename(line).replace('.jpg', ''))
-            #     view_idx = int(os.path.basename(os.path.dirname(line)).replace('cam', ''))
-            #     self.missing_data_list.append((frame_idx, view_idx))
-            # for missing_data_idx in self.missing_data_list:
-            #     if missing_data_idx in self.data_list:
-            #         self.data_list.remove(missing_data_idx)
+                    
+            if os.path.exists(self.data_dir + '/missing_img_files.txt'):
+                # filter missing files
+                self.missing_data_list = []
+                with open(self.data_dir + '/missing_img_files.txt', 'r') as fp:
+                    lines = fp.readlines()
+                for line in lines:
+                    line = line.replace('\\', '/')  # considering both Windows and Ubuntu file system
+                    frame_idx = int(os.path.basename(line).replace('.jpg', ''))
+                    view_idx = int(os.path.basename(os.path.dirname(line)).replace('cam', ''))
+                    self.missing_data_list.append((frame_idx, view_idx))
+                for missing_data_idx in self.missing_data_list:
+                    if missing_data_idx in self.data_list:
+                        self.data_list.remove(missing_data_idx)
 
         print('# Dataset contains %d items' % len(self))
 
@@ -231,8 +233,16 @@ class MvRgbDataset(Dataset):
         data_item['live_bounds'] = live_bounds
 
         if training:
-            color_img = cv.imread(self.data_dir + '/images/%02d/%06d.jpg' % (view_idx, pose_idx), cv.IMREAD_UNCHANGED)
-            mask_img = cv.imread(self.data_dir + '/masks/%02d/%06d.png' % (view_idx, pose_idx), cv.IMREAD_UNCHANGED)
+            img_path = self.data_dir + '/images/%02d/%06d.jpg' % (view_idx, pose_idx)
+            if not os.path.exists(img_path):
+                img_path = self.data_dir + '/images/%02d/%08d.jpg' % (view_idx, pose_idx)
+            color_img = cv.imread(img_path, cv.IMREAD_UNCHANGED)
+
+            msk_path = self.data_dir + '/masks/%02d/%06d.png' % (view_idx, pose_idx)
+            if not os.path.exists(msk_path):
+                msk_path = self.data_dir + '/masks/%02d/%08d.jpg' % (view_idx, pose_idx)
+            mask_img = cv.imread(msk_path, cv.IMREAD_UNCHANGED)
+
             depth_path = self.depth_dir + '/%02d/%06d.png' % (view_idx, pose_idx)
             if os.path.exists(depth_path):
                 depth_img = cv.imread(depth_path, cv.IMREAD_UNCHANGED)
@@ -360,7 +370,7 @@ class MvRgbDataset(Dataset):
 
     @staticmethod
     def gen_uv(img_w, img_h):
-        x, y = np.meshgrid(np.linspace(0, img_w - 1, img_w, dtype = np.int),
-                           np.linspace(0, img_h - 1, img_h, dtype = np.int))
+        x, y = np.meshgrid(np.linspace(0, img_w - 1, img_w, dtype = int),
+                           np.linspace(0, img_h - 1, img_h, dtype = int))
         uv = np.stack([x, y], axis = -1)
         return uv

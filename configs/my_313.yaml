@@ -9,12 +9,13 @@ train:
     frame_range: [0, 60, 1]
     used_cam_ids: [0, 6, 12, 18]
   net_ckpt_dir: 'data/results/my_313'
+  # prev_ckpt: data/results/my_313/epoch_latest
   prev_ckpt: null
   save_init_ckpt: false
   start_epoch: 0
-  end_epoch: 10
+  end_epoch: 100
   ckpt_interval:
-    epoch: 1
+    epoch: 10
     batch: 10000
   eval_interval: 10000
 
@@ -48,8 +49,8 @@ train:
     mask: 1.0
     eikonal: 0.1
     tv: 10.0
-  batch_size: 1
-  num_workers: 4
+  batch_size: 8
+  num_workers: 8
 test:
   data:
     data_dir: 'data/my_zju_mocap/my_313'
@@ -57,6 +58,10 @@ test:
     frame_range: [60, 120, 20]
     frame_win: 2
     fix_head_pose: true
+  pose_data:
+    data_path: 'data/my_zju_mocap/my_313/smpl_params.npz'
+    frame_range: [60, 120, 20]
+    frame_win: 2
 
   # render view setting
   view_setting: 'free'  # 'free' or 'camera'
@@ -72,7 +77,7 @@ test:
   infer_rgb: true
   save_mesh: false
   render_skeleton: true
-  prev_ckpt: 'data/my_zju_mocap/my_313'
+  prev_ckpt: 'data/results/my_313/epoch_latest'
 
 model:
   local_pose: true

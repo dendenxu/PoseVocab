@@ -16,6 +16,7 @@ import utils.recon_util as recon_util
 import utils.visualize_util as visualize_util
 from utils.nerf_util import get_rays
 
+from easyvolcap.utils.console_utils import *
 
 class AvatarTrainer(BaseTrainer):
     def __init__(self, opt):
@@ -273,6 +274,8 @@ class AvatarTrainer(BaseTrainer):
                 extr_gl = extr.copy()
                 extr_gl[1:3, :3] *= -1
                 geo_renderer.set_mv_mat(extr_gl)
+                from easyvolcap.utils.data_utils import export_pts, export_mesh, get_mesh
+                export_mesh(torch.from_numpy(vertices).contiguous(), torch.from_numpy(faces).contiguous(), filename='313.ply')
                 geo_renderer.set_model(vertices[faces.reshape(-1)].astype(np.float32), normals[faces.reshape(-1)].astype(np.float32))
                 geo_img = geo_renderer.render()[:, :, :3]
                 geo_img = (geo_img * 255).astype(np.uint8)
@@ -474,8 +477,8 @@ class AvatarTrainer(BaseTrainer):
 
                 cv.imwrite(training_dataset.data_dir + '/depths/cam%02d/%08d.png' % (view_idx, int(item['data_idx'])), depth_map)
 
-
-if __name__ == '__main__':
+@catch_throw
+def main():
     torch.manual_seed(31359)
     np.random.seed(31359)
 
@@ -499,3 +502,6 @@ if __name__ == '__main__':
         trainer.render_depth_sequences()
     else:
         raise NotImplementedError('Invalid running mode!')
+
+if __name__ == '__main__':
+    main()
