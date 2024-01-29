@@ -6,16 +6,18 @@ train:
   data:
     subject_name: my_313
     data_dir: 'data/my_zju_mocap/my_313'
-    frame_range: [0, 60, 1]
-    used_cam_ids: [0, 6, 12, 18]
+    frame_range: [0, 1, 1]
+    # used_cam_ids: [0, 6, 12, 18]
+    used_cam_ids: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+    # use_zjumocap: True
   net_ckpt_dir: 'data/results/my_313'
   # prev_ckpt: data/results/my_313/epoch_latest
   prev_ckpt: null
-  save_init_ckpt: false
+  save_init_ckpt: true
   start_epoch: 0
   end_epoch: 100
   ckpt_interval:
-    epoch: 10
+    epoch: 1
     batch: 10000
   eval_interval: 10000
 
@@ -49,19 +51,22 @@ train:
     mask: 1.0
     eikonal: 0.1
     tv: 10.0
-  batch_size: 8
-  num_workers: 8
+  batch_size: 1
+  num_workers: 0
 test:
   data:
     data_dir: 'data/my_zju_mocap/my_313'
     used_cam_ids: [3, 9, 15]
     frame_range: [60, 120, 20]
     frame_win: 2
-    fix_head_pose: true
+    fix_head_pose: false
+    use_zjumocap: True
+
   pose_data:
     data_path: 'data/my_zju_mocap/my_313/smpl_params.npz'
     frame_range: [60, 120, 20]
     frame_win: 2
+    # use_zjumocap: True
 
   # render view setting
   view_setting: 'free'  # 'free' or 'camera'

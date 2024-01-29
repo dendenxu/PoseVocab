@@ -15,7 +15,7 @@ train:
   end_epoch: 100
   ckpt_interval:
     epoch: 1
-    batch: 10000
+    batch: 240
   eval_interval: 10000
 
   # nerf-related
@@ -57,7 +57,7 @@ test:
     frame_win: 2
     fix_head_pose: true
   pose_data:
-    data_path: 'test_pose/thuman4/pose_01.npz'
+    data_path: 'data/thuman4/subject00/smpl_params.npz'
     frame_range: [0, 1500, 1]
     frame_win: 2
 
@@ -75,7 +75,7 @@ test:
   infer_rgb: true
   save_mesh: false
   render_skeleton: true
-  prev_ckpt: 'data/pretrained_models/subject00'
+  prev_ckpt: 'data/results/subject00/epoch_latest'
 
 model:
   local_pose: true

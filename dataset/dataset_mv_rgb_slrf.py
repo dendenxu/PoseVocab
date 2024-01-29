@@ -27,12 +27,15 @@ class MvRgbDataset(Dataset):
                  frame_win = 0,
                  subject_name = None,
                  fix_head_pose = False,
-                 fix_hand_pose = False):
+                 fix_hand_pose = False,
+                 use_zjumocap = False,
+                 ):
         super(MvRgbDataset, self).__init__()
 
         self.data_dir = data_dir
         self.training = training
         self.subject_name = subject_name
+        self.use_zjumocap = use_zjumocap
         if self.subject_name is None:
             self.subject_name = os.path.basename(self.data_dir)
 
@@ -177,7 +180,9 @@ class MvRgbDataset(Dataset):
                                                 jaw_pose = self.smpl_data['jaw_pose'][pose_idx][None] if 'jaw_pose' in self.smpl_data else None,
                                                 expression = self.smpl_data['expression'][pose_idx][None] if 'expression' in self.smpl_data else None,
                                                 left_hand_pose = left_hand_pose[None],
-                                                right_hand_pose = right_hand_pose[None])
+                                                right_hand_pose = right_hand_pose[None],
+                                                use_zjumocap=self.use_zjumocap,
+                                                )
             cano_smpl = self.smpl_model.forward(betas = self.smpl_data['betas'][0][None],
                                                 global_orient = config.cano_smpl_global_orient[None],
                                                 transl = config.cano_smpl_transl[None],
@@ -236,7 +241,7 @@ class MvRgbDataset(Dataset):
             img_path = self.data_dir + '/images/%02d/%06d.jpg' % (view_idx, pose_idx)
             if not os.path.exists(img_path):
                 img_path = self.data_dir + '/images/%02d/%08d.jpg' % (view_idx, pose_idx)
-            color_img = cv.imread(img_path, cv.IMREAD_UNCHANGED)
+            color_img = cv.imread(img_path, cv.IMREAD_UNCHANGED)[..., [2,1,0]]
 
             msk_path = self.data_dir + '/masks/%02d/%06d.png' % (view_idx, pose_idx)
             if not os.path.exists(msk_path):

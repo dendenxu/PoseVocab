@@ -19,13 +19,14 @@ import config
 
 class PoseDataset(Dataset):
     @torch.no_grad()
-    def __init__(self, data_path, frame_range = None, smpl_shape = None, gender = 'neutral', frame_win = 0, fix_head_pose = True, fix_hand_pose = True, denoise = False):
+    def __init__(self, data_path, frame_range = None, smpl_shape = None, gender = 'male', frame_win = 0, fix_head_pose = True, fix_hand_pose = True, denoise = False, use_zjumocap = False):
         super(PoseDataset, self).__init__()
 
         self.data_path = data_path
         self.training = False
 
         self.gender = gender
+        self.use_zjumocap = use_zjumocap
 
         self.seq_name, ext = os.path.splitext(os.path.basename(data_path))
         if ext == '.pkl':
@@ -140,7 +141,9 @@ class PoseDataset(Dataset):
                                             transl = self.transl[pose_idx][None],
                                             body_pose = self.body_poses[pose_idx, 3: 66][None],
                                             left_hand_pose = config.left_hand_pose[None],
-                                            right_hand_pose = config.right_hand_pose[None])
+                                            right_hand_pose = config.right_hand_pose[None],
+                                            use_zjumocap=self.use_zjumocap,
+                                            )
 
         data_item = dict()
         data_item['item_idx'] = index

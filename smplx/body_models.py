@@ -26,7 +26,7 @@ import torch
 import torch.nn as nn
 
 from .lbs import (
-    lbs, vertices2landmarks, find_dynamic_lmk_idx_and_bcoords, blend_shapes)
+    lbs, vertices2landmarks, find_dynamic_lmk_idx_and_bcoords, blend_shapes, batch_rodrigues)
 
 from .vertex_ids import vertex_ids as VERTEX_IDS
 from .utils import (
@@ -1127,6 +1127,7 @@ class SMPLX(SMPLH):
         return_full_pose: bool = False,
         pose2rot: bool = True,
         return_shaped: bool = True,
+        # use_zjumocap: bool = False,
         **kwargs
     ) -> SMPLXOutput:
         '''
