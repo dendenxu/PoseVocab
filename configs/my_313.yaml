@@ -13,10 +13,10 @@ train:
     # use_zjumocap: True
   net_ckpt_dir: 'data/results/my_313'
   # prev_ckpt: data/results/my_313/epoch_latest
-  prev_ckpt: data/results/my_313/epoch_40
+  prev_ckpt: data/results/my_313/epoch_latest
   save_init_ckpt: false
-  start_epoch: 40
-  end_epoch: 100
+  start_epoch: 100
+  end_epoch: 2000
   ckpt_interval:
     epoch: 1
     batch: 10000
@@ -53,7 +53,7 @@ train:
     eikonal: 0.1
     tv: 10.0
   batch_size: 8
-  num_workers: 0
+  num_workers: 8
 test:
   data:
     data_dir: 'data/my_zju_mocap/my_313'
@@ -83,7 +83,7 @@ test:
   infer_rgb: true
   save_mesh: false
   render_skeleton: true
-  prev_ckpt: 'data/results/my_313/epoch_40'
+  prev_ckpt: 'data/results/my_313/epoch_latest'
 
 model:
   local_pose: true
