@@ -58,7 +58,7 @@ class MvRgbDataset(Dataset):
         smpl_data = np.load(self.data_dir + '/smpl_params.npz', allow_pickle = True)
         smpl_data = dict(smpl_data)
         self.smpl_data = {k: torch.from_numpy(v.astype(np.float32)) for k, v in smpl_data.items()}
-        self.smpl_model = smplx.SMPLX(model_path = config.PROJ_DIR + '/smpl_files/smplx', gender = self.gender, use_pca = False, num_pca_comps = 45, flat_hand_mean = True, batch_size = 1)
+        self.smpl_model = smplx.SMPLX(model_path = config.PROJ_DIR + '/smpl_files/smplx', gender = self.gender, use_pca = False, num_pca_comps = 45, flat_hand_mean = True, batch_size = 1, num_betas=16)
 
         self.fix_head_pose = fix_head_pose
         self.fix_hand_pose = fix_hand_pose

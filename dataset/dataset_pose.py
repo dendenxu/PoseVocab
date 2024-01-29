@@ -70,7 +70,7 @@ class PoseDataset(Dataset):
         self.fix_head_pose = fix_head_pose
         self.fix_hand_pose = fix_hand_pose
 
-        self.smpl_model = smplx.SMPLX(model_path = config.PROJ_DIR + '/smpl_files/smplx', gender = self.gender, use_pca = False, num_pca_comps = 45, flat_hand_mean = True, batch_size = 1)
+        self.smpl_model = smplx.SMPLX(model_path = config.PROJ_DIR + '/smpl_files/smplx', gender = self.gender, use_pca = False, num_pca_comps = 45, flat_hand_mean = True, batch_size = 1, num_betas=16)
 
         pose_list = list(range(self.body_poses.shape[0]))
         if frame_range is not None:

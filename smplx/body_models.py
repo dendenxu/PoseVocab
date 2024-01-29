@@ -48,7 +48,7 @@ class SMPL(nn.Module):
 
     def __init__(
         self, model_path: str,
-	kid_template_path: str = '',
+        kid_template_path: str = '',
         data_struct: Optional[Struct] = None,
         create_betas: bool = True,
         betas: Optional[Tensor] = None,
@@ -901,7 +901,7 @@ class SMPLX(SMPLH):
 
     def __init__(
         self, model_path: str,
-	kid_template_path: str = '',
+        kid_template_path: str = '',
         num_expression_coeffs: int = 10,
         create_expression: bool = True,
         expression: Optional[Tensor] = None,

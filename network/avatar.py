@@ -196,7 +196,6 @@ class AvatarNet(nn.Module):
         near = batch['near']
         far = batch['far']
         batch_size, n_pixels = ray_o.shape[:2]
-        breakpoint()
         if depth_guided_sampling['flag']:
             # update near and far by dist
             valid_dist_flag = batch['dist'] > 1e-6

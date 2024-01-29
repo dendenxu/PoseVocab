@@ -6,15 +6,16 @@ train:
   data:
     subject_name: my_313
     data_dir: 'data/my_zju_mocap/my_313'
-    frame_range: [0, 1, 1]
-    # used_cam_ids: [0, 6, 12, 18]
-    used_cam_ids: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+    # frame_range: [0, 1, 1]
+    frame_range: [0, 60, 1]
+    used_cam_ids: [0, 6, 12, 18]
+    # used_cam_ids: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
     # use_zjumocap: True
   net_ckpt_dir: 'data/results/my_313'
   # prev_ckpt: data/results/my_313/epoch_latest
-  prev_ckpt: null
-  save_init_ckpt: true
-  start_epoch: 0
+  prev_ckpt: data/results/my_313/epoch_40
+  save_init_ckpt: false
+  start_epoch: 40
   end_epoch: 100
   ckpt_interval:
     epoch: 1
@@ -28,7 +29,7 @@ train:
     N_ray_samples: 32
   compute_grad: true
   ray_sampling: # ray sampling method on training images
-    epoch_ranges: [[0, 40], [40, 9999]]
+    epoch_ranges: [[0, 9999], [9999, 999999]]
     schedules: ['random', 'patch']
     type: null
     patch:
@@ -51,7 +52,7 @@ train:
     mask: 1.0
     eikonal: 0.1
     tv: 10.0
-  batch_size: 1
+  batch_size: 8
   num_workers: 0
 test:
   data:
@@ -82,7 +83,7 @@ test:
   infer_rgb: true
   save_mesh: false
   render_skeleton: true
-  prev_ckpt: 'data/results/my_313/epoch_latest'
+  prev_ckpt: 'data/results/my_313/epoch_40'
 
 model:
   local_pose: true
