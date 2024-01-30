@@ -206,7 +206,7 @@ class AvatarTrainer(BaseTrainer):
                 view_folder = '%d_view' % config.opt['test']['render_view_idx']
             else:
                 raise ValueError('Invalid view setting for animation!')
-            output_dir = './test_results/{}/{}/{}/{}'.format(training_dataset.subject_name, dataset_name, seq_name, view_folder)
+            output_dir = 'data/test_results/{}/{}/{}/{}'.format(training_dataset.subject_name, dataset_name, seq_name, view_folder)
         print('# Output dir: %s' % output_dir)
         os.makedirs(output_dir + '/live_geometry', exist_ok = True)
         os.makedirs(output_dir + '/live_geometry/rendered_geometry', exist_ok = True)
@@ -350,7 +350,7 @@ class AvatarTrainer(BaseTrainer):
                 rgb_map[uv[:, 1], uv[:, 0]] = output['rgb_map'][0]
                 rgb_map.clip_(0., 1.)
                 rgb_map = (rgb_map * 255).to(torch.uint8)
-                cv.imwrite(output_dir + '/rgb_map/%s.png' % item['data_idx'], (rgb_map.cpu().numpy()).astype(np.uint8))
+                cv.imwrite(output_dir + '/rgb_map/%s.png' % item['data_idx'], (rgb_map.cpu().numpy()).astype(np.uint8)[..., [2,1,0]])
 
             if 'acc_map' in output:
                 acc_map = torch.zeros((item['img_h'], item['img_w']), dtype = torch.float32, device = config.device)
