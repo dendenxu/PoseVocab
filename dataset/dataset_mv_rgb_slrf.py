@@ -17,18 +17,19 @@ import utils.nerf_util as nerf_util
 import utils.visualize_util as visualize_util
 import config
 
+from easyvolcap.utils.console_utils import *
 
 class MvRgbDataset(Dataset):
     @torch.no_grad()
-    def __init__(self, data_dir, frame_range = None, training = True,
-                 used_cam_ids = None,
-                 load_smpl_pos_map = False,
-                 load_smpl_nml_map = False,
-                 frame_win = 0,
-                 subject_name = None,
-                 fix_head_pose = False,
-                 fix_hand_pose = False,
-                 use_zjumocap = False,
+    def __init__(self, data_dir, frame_range=None, training=True,
+                 used_cam_ids=None,
+                 load_smpl_pos_map=False,
+                 load_smpl_nml_map=False,
+                 frame_win=0,
+                 subject_name=None,
+                 fix_head_pose=False,
+                 fix_hand_pose=False,
+                 use_zjumocap=False,
                  ):
         super(MvRgbDataset, self).__init__()
 
@@ -53,12 +54,13 @@ class MvRgbDataset(Dataset):
         self.intr_mats = [np.array(cam_data['%02d' % view_idx]['K'], np.float32).reshape(3, 3) for view_idx in range(self.view_num)]
         self.img_heights = [cam_data['%02d' % view_idx]['imgSize'][1] for view_idx in range(self.view_num)]
         self.img_widths = [cam_data['%02d' % view_idx]['imgSize'][0] for view_idx in range(self.view_num)]
+        self.distCoeffs = [cam_data['%02d' % view_idx]['distCoeff'][0] for view_idx in range(self.view_num)]
         self.gender = 'male'
 
-        smpl_data = np.load(self.data_dir + '/smpl_params.npz', allow_pickle = True)
+        smpl_data = np.load(self.data_dir + '/smpl_params.npz', allow_pickle=True)
         smpl_data = dict(smpl_data)
         self.smpl_data = {k: torch.from_numpy(v.astype(np.float32)) for k, v in smpl_data.items()}
-        self.smpl_model = smplx.SMPLX(model_path = config.PROJ_DIR + '/smpl_files/smplx', gender = self.gender, use_pca = False, num_pca_comps = 45, flat_hand_mean = True, batch_size = 1, num_betas=16)
+        self.smpl_model = smplx.SMPLX(model_path=config.PROJ_DIR + '/smpl_files/smplx', gender=self.gender, use_pca=False, num_pca_comps=45, flat_hand_mean=True, batch_size=1, num_betas=16)
 
         self.fix_head_pose = fix_head_pose
         self.fix_hand_pose = fix_hand_pose
@@ -90,7 +92,7 @@ class MvRgbDataset(Dataset):
             for pose_idx in self.pose_list:
                 for view_idx in self.used_cam_ids:
                     self.data_list.append((pose_idx, view_idx))
-                    
+
             if os.path.exists(self.data_dir + '/missing_img_files.txt'):
                 # filter missing files
                 self.missing_data_list = []
@@ -110,10 +112,10 @@ class MvRgbDataset(Dataset):
         # SMPL related
         smpl_util.smpl_skinning_weights = self.smpl_model.lbs_weights.clone().to(torch.float32).to(config.device)
         # ret = self.smpl_model.forward(config.cano_smpl_pose[None], self.shape[None])
-        ret = self.smpl_model.forward(betas = self.smpl_data['betas'][0][None],
-                                      global_orient = config.cano_smpl_global_orient[None],
-                                      transl = config.cano_smpl_transl[None],
-                                      body_pose = config.cano_smpl_body_pose[None])
+        ret = self.smpl_model.forward(betas=self.smpl_data['betas'][0][None],
+                                      global_orient=config.cano_smpl_global_orient[None],
+                                      transl=config.cano_smpl_transl[None],
+                                      body_pose=config.cano_smpl_body_pose[None])
         self.cano_smpl = {k: v[0] for k, v in ret.items() if isinstance(v, torch.Tensor)}
         self.inv_cano_jnt_mats = torch.linalg.inv(self.cano_smpl['A'])
         min_xyz = self.cano_smpl['vertices'].min(0)[0]
@@ -150,7 +152,7 @@ class MvRgbDataset(Dataset):
         return self.getitem(index, self.training)
 
     @torch.no_grad()
-    def getitem(self, index, training = True, **kwargs):
+    def getitem(self, index, training=True, **kwargs):
         # time0 = time.time()
         if training or ('eval' in kwargs and kwargs['eval'] == True):  # training or evaluation
             pose_idx, view_idx = self.data_list[index]
@@ -158,7 +160,7 @@ class MvRgbDataset(Dataset):
             view_idx = kwargs['view_idx'] if 'view_idx' in kwargs else view_idx
             data_idx = (pose_idx, view_idx)
             if not training:
-            # if True:
+                # if True:
                 print('data index: (%d, %d)' % (pose_idx, view_idx))
         else:  # testing
             pose_idx = self.pose_list[index]
@@ -173,24 +175,24 @@ class MvRgbDataset(Dataset):
             else:
                 left_hand_pose = config.left_hand_pose
                 right_hand_pose = config.right_hand_pose
-            live_smpl = self.smpl_model.forward(betas = self.smpl_data['betas'][0][None],
-                                                global_orient = self.smpl_data['global_orient'][pose_idx][None],
-                                                transl = self.smpl_data['transl'][pose_idx][None],
-                                                body_pose = self.smpl_data['body_pose'][pose_idx][None],
-                                                jaw_pose = self.smpl_data['jaw_pose'][pose_idx][None] if 'jaw_pose' in self.smpl_data else None,
-                                                expression = self.smpl_data['expression'][pose_idx][None] if 'expression' in self.smpl_data else None,
-                                                left_hand_pose = left_hand_pose[None],
-                                                right_hand_pose = right_hand_pose[None],
+            live_smpl = self.smpl_model.forward(betas=self.smpl_data['betas'][0][None],
+                                                global_orient=self.smpl_data['global_orient'][pose_idx][None],
+                                                transl=self.smpl_data['transl'][pose_idx][None],
+                                                body_pose=self.smpl_data['body_pose'][pose_idx][None],
+                                                jaw_pose=self.smpl_data['jaw_pose'][pose_idx][None] if 'jaw_pose' in self.smpl_data else None,
+                                                expression=self.smpl_data['expression'][pose_idx][None] if 'expression' in self.smpl_data else None,
+                                                left_hand_pose=left_hand_pose[None],
+                                                right_hand_pose=right_hand_pose[None],
                                                 use_zjumocap=self.use_zjumocap,
                                                 )
-            cano_smpl = self.smpl_model.forward(betas = self.smpl_data['betas'][0][None],
-                                                global_orient = config.cano_smpl_global_orient[None],
-                                                transl = config.cano_smpl_transl[None],
-                                                body_pose = config.cano_smpl_body_pose[None],
+            cano_smpl = self.smpl_model.forward(betas=self.smpl_data['betas'][0][None],
+                                                global_orient=config.cano_smpl_global_orient[None],
+                                                transl=config.cano_smpl_transl[None],
+                                                body_pose=config.cano_smpl_body_pose[None],
                                                 # jaw_pose = self.smpl_data['jaw_pose'][pose_idx][None],
                                                 # expression = self.smpl_data['expression'][pose_idx][None],
-                                                left_hand_pose = left_hand_pose[None],
-                                                right_hand_pose = right_hand_pose[None])
+                                                left_hand_pose=left_hand_pose[None],
+                                                right_hand_pose=right_hand_pose[None])
 
         data_item = dict()
         if self.load_smpl_pos_map:
@@ -241,12 +243,14 @@ class MvRgbDataset(Dataset):
             img_path = self.data_dir + '/images/%02d/%06d.jpg' % (view_idx, pose_idx)
             if not os.path.exists(img_path):
                 img_path = self.data_dir + '/images/%02d/%08d.jpg' % (view_idx, pose_idx)
-            color_img = cv.imread(img_path, cv.IMREAD_UNCHANGED)[..., [2,1,0]]
+            color_img = cv.imread(img_path, cv.IMREAD_UNCHANGED)[..., [2, 1, 0]]
+            color_img = cv.undistort(color_img, self.intr_mats[view_idx], self.distCoeffs[view_idx])
 
             msk_path = self.data_dir + '/masks/%02d/%06d.png' % (view_idx, pose_idx)
             if not os.path.exists(msk_path):
                 msk_path = self.data_dir + '/masks/%02d/%08d.jpg' % (view_idx, pose_idx)
             mask_img = cv.imread(msk_path, cv.IMREAD_UNCHANGED)
+            mask_img = cv.undistort(mask_img, self.intr_mats[view_idx], self.distCoeffs[view_idx])
 
             depth_path = self.depth_dir + '/%02d/%06d.png' % (view_idx, pose_idx)
             if os.path.exists(depth_path):
@@ -259,20 +263,21 @@ class MvRgbDataset(Dataset):
             depth_img = (depth_img / 1000.).astype(np.float32)
 
             boundary_mask_img, mask_img = self.get_boundary_mask(mask_img)
+            # log(mask_img.sum())
             depth_gradient_mask = self.get_depth_gradient_mask(depth_img)
             depth_img[depth_gradient_mask] = 0.
 
             # sample NeRF data
             ray_sampling = self.ray_sampling
             if ray_sampling['type'] == 'random':
-                nerf_random = nerf_util.sample_randomly_for_nerf_rendering(color_img, mask_img, depth_img, self.extr_mats[view_idx], self.intr_mats[view_idx], live_bounds, unsample_region_mask = boundary_mask_img, **ray_sampling['random'])
+                nerf_random = nerf_util.sample_randomly_for_nerf_rendering(color_img, mask_img, depth_img, self.extr_mats[view_idx], self.intr_mats[view_idx], live_bounds, unsample_region_mask=boundary_mask_img, **ray_sampling['random'])
                 data_item.update({'nerf_random': nerf_random})
             elif ray_sampling['type'] == 'patch':
-                nerf_patch = nerf_util.sample_patch_for_nerf_rendering(color_img, mask_img, depth_img, self.extr_mats[view_idx], self.intr_mats[view_idx], live_bounds, unsample_region_mask = boundary_mask_img, **ray_sampling['patch'])
+                nerf_patch = nerf_util.sample_patch_for_nerf_rendering(color_img, mask_img, depth_img, self.extr_mats[view_idx], self.intr_mats[view_idx], live_bounds, unsample_region_mask=boundary_mask_img, **ray_sampling['patch'])
                 data_item.update({'nerf_patch': nerf_patch})
             elif ray_sampling['type'] == 'both':
-                nerf_random = nerf_util.sample_randomly_for_nerf_rendering(color_img, mask_img, depth_img, self.extr_mats[view_idx], self.intr_mats[view_idx], live_bounds, unsample_region_mask = boundary_mask_img, **ray_sampling['random'])
-                nerf_patch = nerf_util.sample_patch_for_nerf_rendering(color_img, mask_img, depth_img, self.extr_mats[view_idx], self.intr_mats[view_idx], live_bounds, unsample_region_mask = boundary_mask_img, **ray_sampling['patch'])
+                nerf_random = nerf_util.sample_randomly_for_nerf_rendering(color_img, mask_img, depth_img, self.extr_mats[view_idx], self.intr_mats[view_idx], live_bounds, unsample_region_mask=boundary_mask_img, **ray_sampling['random'])
+                nerf_patch = nerf_util.sample_patch_for_nerf_rendering(color_img, mask_img, depth_img, self.extr_mats[view_idx], self.intr_mats[view_idx], live_bounds, unsample_region_mask=boundary_mask_img, **ray_sampling['patch'])
                 data_item.update({'nerf_random': nerf_random,
                                   'nerf_patch': nerf_patch})
             else:
@@ -290,7 +295,7 @@ class MvRgbDataset(Dataset):
             img_w = 512 if 'img_w' not in kwargs else kwargs['img_w']
             intr = np.array([[550, 0, 256], [0, 550, 256], [0, 0, 1]], np.float32) if 'intr' not in kwargs else kwargs['intr']
             if 'extr' not in kwargs:
-                extr = visualize_util.calc_front_mv(live_bounds.mean(0), tar_pos = np.array([0, 0, 2.5]))
+                extr = visualize_util.calc_front_mv(live_bounds.mean(0), tar_pos=np.array([0, 0, 2.5]))
             else:
                 extr = kwargs['extr']
 
@@ -337,7 +342,7 @@ class MvRgbDataset(Dataset):
         return data_item
 
     @staticmethod
-    def get_depth_gradient_mask(depth, kernel_size = 5, thres = 0.03):
+    def get_depth_gradient_mask(depth, kernel_size=5, thres=0.03):
         sobel_depth_x = np.abs(cv.Sobel(depth, cv.CV_32F, 1, 0)) / 4.
         sobel_depth_y = np.abs(cv.Sobel(depth, cv.CV_32F, 0, 1)) / 4.
 
@@ -350,7 +355,7 @@ class MvRgbDataset(Dataset):
         return depth_gradient_mask > 0
 
     @staticmethod
-    def get_boundary_mask(mask, kernel_size = 5):
+    def get_boundary_mask(mask, kernel_size=5):
         """
         :param mask: np.uint8
         :param kernel_size:
@@ -375,7 +380,7 @@ class MvRgbDataset(Dataset):
 
     @staticmethod
     def gen_uv(img_w, img_h):
-        x, y = np.meshgrid(np.linspace(0, img_w - 1, img_w, dtype = int),
-                           np.linspace(0, img_h - 1, img_h, dtype = int))
-        uv = np.stack([x, y], axis = -1)
+        x, y = np.meshgrid(np.linspace(0, img_w - 1, img_w, dtype=int),
+                           np.linspace(0, img_h - 1, img_h, dtype=int))
+        uv = np.stack([x, y], axis=-1)
         return uv

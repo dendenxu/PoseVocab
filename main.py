@@ -448,7 +448,7 @@ class AvatarTrainer(BaseTrainer):
         self.load_ckpt(self.opt['train']['net_ckpt_dir'] + '/epoch_latest', False)
 
         for view_idx in range(training_dataset.view_num):
-            os.makedirs(training_dataset.data_dir + '/depths/cam%02d' % view_idx, exist_ok = True)
+            os.makedirs(training_dataset.data_dir + '/depths/%02d' % view_idx, exist_ok = True)
 
         for idx in range(len(training_dataset)):
             item = training_dataset.getitem(idx, training = False)
@@ -475,7 +475,7 @@ class AvatarTrainer(BaseTrainer):
                 pos_map[mask] = np.einsum('ij,vj->vi', extr[:3, :3], pos_map[mask]) + extr[:3, 3]
                 depth_map = (pos_map[:, :, 2] * 1000).astype(np.uint16)
 
-                cv.imwrite(training_dataset.data_dir + '/depths/cam%02d/%08d.png' % (view_idx, int(item['data_idx'])), depth_map)
+                cv.imwrite(training_dataset.data_dir + '/depths/%02d/%06d.png' % (view_idx, int(item['data_idx'])), depth_map)
 
 @catch_throw
 def main():

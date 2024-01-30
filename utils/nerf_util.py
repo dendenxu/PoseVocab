@@ -2,7 +2,7 @@ import torch
 import torch.nn.functional as F
 import numpy as np
 import cv2
-
+from easyvolcap.utils.console_utils import *
 
 def project(xyz, K, RT):
     """
@@ -369,8 +369,12 @@ def sample_patch_for_nerf_rendering(color_img,
         v_min = np.clip(center_uv[1] - half_patch_size, 0, img_h - patch_size)
         u_max = u_min + patch_size
         v_max = v_min + patch_size
-
+        # log(u_min, v_min, u_max, v_max)
+        # log(u_max - u_min, v_max - v_min)
+        # log(img_w, img_h)
         uv_patch = uv_img[v_min: v_max, u_min: u_max].reshape(-1, 2)
+        # log(uv_img.shape)
+        # log(uv_patch.shape)
         bound_mask_patch = bound_mask[v_min: v_max, u_min: u_max].reshape(-1)
         ray_d_patch, ray_o_patch = get_rays(uv_patch[bound_mask_patch], extr, intr)
         near_patch, far_patch, mask_at_bound = get_near_far(live_bounds, ray_o_patch, ray_d_patch)
@@ -389,6 +393,8 @@ def sample_patch_for_nerf_rendering(color_img,
     ray_d = np.concatenate(ray_d, 0)
     near = np.concatenate(near, 0)
     far = np.concatenate(far, 0)
+    # log(mask_at_bound.sum())
+    # log(near.shape)
 
     # gt
     color_gt = color_img[uv[:, 1], uv[:, 0]]

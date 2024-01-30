@@ -27,8 +27,9 @@ near_dist_sigma = 0.0
 # bg_color = 0
 
 # wight background
-white_bkgd = True
-bg_color = 1
+# white_bkgd = True
+white_bkgd = False
+bg_color = 0
 
 last_geo_feat = None
 
